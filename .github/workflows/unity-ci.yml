@@ -1,0 +1,101 @@
+name: Unity CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    tags: [ 'v*' ]
+  pull_request:
+    branches:
+      - staging
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Run Edit/Play Mode tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with LFS)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-lib-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+
+      - name: Read Unity version
+        id: unity
+        shell: bash
+        run: |
+          ver=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt)
+          echo "UNITY_VERSION=$ver" >> $GITHUB_ENV
+
+      - name: Run tests (EditMode + PlayMode)
+        uses: game-ci/unity-test-runner@v4
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          testMode: all
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          # Enable code coverage (requires com.unity.testtools.codecoverage)
+          # Exclude test and Unity assemblies from coverage
+          customParameters: >-
+            -nographics -batchmode -enableCodeCoverage
+            -coverageOptions "generateHtmlReport;generateBadgeReport;path=CodeCoverage;historyPath=CodeCoverage/History;assemblyFilters:-Ayni.*Tests;-Unity.*;-UnityEditor.*;-UnityEngine.*"
+
+      - name: Upload code coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeCoverage
+          path: CodeCoverage/**
+
+  build:
+    name: Build project (Windows64)
+    needs: tests
+    # Only build on main branch or version tags when a license is provided
+    if: ${{ (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/')) && secrets.UNITY_LICENSE != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with LFS)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-lib-${{ hashFiles('ProjectSettings/ProjectVersion.txt', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+
+      - name: Read Unity version
+        id: unity
+        shell: bash
+        run: |
+          ver=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt)
+          echo "UNITY_VERSION=$ver" >> $GITHUB_ENV
+
+      - name: Build (Windows 64)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildName: ${{ github.event.repository.name }}
+          buildsPath: Builds
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows64-Build
+          path: Builds/**
+

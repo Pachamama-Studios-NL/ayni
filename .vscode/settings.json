@@ -1,0 +1,10 @@
+{
+  // Keep workspace recommendations visible and scoped to this project
+  "extensions.ignoreRecommendations": false,
+
+  // Editor housekeeping that complements repo settings
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true
+}
+

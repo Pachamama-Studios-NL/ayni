@@ -1,0 +1,12 @@
+{
+  // Workspace-specific extension recommendations and blocklist
+  "recommendations": [
+    "ms-dotnettools.csharp",        
+    "ms-dotnettools.csdevkit",      
+    "ms-dotnettools.unity"            
+  ],
+  "unwantedRecommendations": [
+    // Old Unity debugger extension is deprecated in favor of ms-dotnettools.unity
+    "Unity.unity-debug"
+  ]
+}
