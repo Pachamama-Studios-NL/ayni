@@ -88,7 +88,35 @@ git rm --cached -r . && git reset -- . && git add . && git commit -m "Re-stage a
 - Keep branches up to date and require conversations resolved.
 - See `.github/BRANCH_PROTECTION.md` for detailed recommendations.
 
+## Using AI Assistants
+
+- Unity AI — best for: quick in‑Editor help that can apply changes directly to open assets.
+  - Code/shader snippets, small MonoBehaviours, inspector/tooling tweaks.
+  - Asset generation (textures/sprites) via AI Generators.
+  - Contextual edits to scenes/prefabs while the Editor is open.
+- Codex CLI — best for: repo‑wide work outside the Editor.
+  - CI setup, tests/coverage, GitHub workflows, documentation, codebase refactors.
+  - Multi‑file edits, scripts under `Assets/Editor/`, package/version pinning.
+  - Deterministic changes you want reviewed in PRs before entering the Editor.
+- Practical note: Unity AI packages and availability vary by org/seat; pinning occurs via `Packages/manifest.json`.
+- Privacy: avoid pasting proprietary code into cloud tools unless approved by your org policy.
+
+## Unity AI Setup
+
+- Enable in Editor:
+  - Use the top toolbar AI menu → Install/Enable AI packages (or Window → Package Manager → Unity Registry, install `com.unity.ai.assistant`, `com.unity.ai.generators`, and dependencies).
+  - Open the AI panel from the AI menu and sign in if prompted.
+- Verify install:
+  - Package Manager shows the AI packages; AI dropdown exposes Assistant and Generators.
+- What to commit:
+  - `Packages/manifest.json` and `Packages/packages-lock.json`.
+  - Any new settings under `ProjectSettings/Packages/com.unity.ai.*`.
+  - Do not commit `Library/` or cache directories.
+- Access/licensing:
+  - Availability depends on your Unity org and seat assignment; not all users will see the packages.
+- Security:
+  - Follow org policy for sharing proprietary code with cloud tools.
+
 ## License
 
 MIT — see `LICENSE` for details.
-
