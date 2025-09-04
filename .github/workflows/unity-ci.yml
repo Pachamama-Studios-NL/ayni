@@ -20,6 +20,8 @@ jobs:
   tests:
     name: Run Edit/Play Mode tests
     runs-on: ubuntu-latest
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
     steps:
       - name: Checkout (with LFS)
         uses: actions/checkout@v4
@@ -61,9 +63,12 @@ jobs:
   build:
     name: Build project (Windows64)
     needs: tests
-    # Only build on main branch or version tags when a license is provided
-    if: ${{ (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/')) && secrets.UNITY_LICENSE != '' }}
+    # Run build job on staging/main branches and version tags
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/staging') || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
+    env:
+      # Expose license to steps; steps can gate on this value
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
     steps:
       - name: Checkout (with LFS)
         uses: actions/checkout@v4
@@ -84,9 +89,10 @@ jobs:
           echo "UNITY_VERSION=$ver" >> $GITHUB_ENV
 
       - name: Build (Windows 64)
+        if: ${{ env.UNITY_LICENSE != '' }}
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_LICENSE: ${{ env.UNITY_LICENSE }}
         with:
           unityVersion: ${{ env.UNITY_VERSION }}
           targetPlatform: StandaloneWindows64
@@ -94,8 +100,8 @@ jobs:
           buildsPath: Builds
 
       - name: Upload build artifact
+        if: ${{ env.UNITY_LICENSE != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: Windows64-Build
+          name: Windows64-Build-${{ github.ref_name }}
           path: Builds/**
-

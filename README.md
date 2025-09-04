@@ -42,7 +42,7 @@ The project pins packages via `Packages/manifest.json` and `Packages/packages-lo
 
 ## Continuous Integration
 
-GitHub Actions workflow (`.github/workflows/unity-ci.yml`) runs tests on PRs and builds on `main` when a Unity license is provided.
+GitHub Actions workflow (`.github/workflows/unity-ci.yml`) runs tests on PRs and builds on `staging` and `main` (license required). Version tags (`v*`) also build.
 
 - Secrets required for builds:
   - `UNITY_LICENSE`: Unity (Personal/Plus/Pro) license file content. See game-ci docs for how to obtain the base64 license string.
@@ -76,7 +76,7 @@ git rm --cached -r . && git reset -- . && git add . && git commit -m "Re-stage a
 - Base new feature branches off `staging`.
 - Open PRs from feature branches into `staging` for testing and review.
 - CI runs tests on PRs to `staging` and on pushes to `staging`.
-- After validation, merge changes into `main` for deployment/builds.
+- Builds run on `staging` (for QA validation) and on `main`/tags (for releases).
 - Optional: tag releases (`vX.Y.Z`) to produce release builds.
 - Avoid committing builds; publish build artifacts via CI instead.
 
